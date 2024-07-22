@@ -7,8 +7,11 @@ import books from "./books";
 
 const app = new Hono().basePath("/api");
 
-app.route("/authors", authors);
-app.route("/books", books);
+app.get("/hello", (c: any) => {
+  return c.Json({ hwllo: "world" });
+});
+// app.route("/authors", authors);
+// app.route("/books", books);
 
 export const GET = handle(app);
 export const POST = handle(app);
