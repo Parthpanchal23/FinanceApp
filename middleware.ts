@@ -1,7 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/"]);
+const isProtectedRoute = createRouteMatcher([
+  "/",
+  // is not autheticated this push ib sign in page
+  // ,"/api(.*)"
+]);
 
 export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) {
