@@ -26,18 +26,19 @@ const app = new Hono()
     async (c) => {
       const auth = getAuth(c);
       const values = c.req.valid("json");
+      console.log("values", values);
       if (!auth?.userId) {
-        return c.json({ error: "Unauthorized" }, 401);
+        return c.json({ data: { error: "Unauthorized" } }, 401);
       }
-      const data = await db
+      const [data] = await db
         .insert(accounts)
         .values({
           id: createId(),
-          userId: auth.userId,
+          userId: auth?.userId,
           ...values,
         })
         .returning();
-      // return c.json({});
+      return c.json({ data });
     }
   );
 
