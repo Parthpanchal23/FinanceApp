@@ -22,7 +22,6 @@ const Header = () => {
         </div>
         <WelcomeMessage />
       </div>
-      header
     </header>
   );
 };

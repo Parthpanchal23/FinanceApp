@@ -2,10 +2,12 @@
 import { db } from "@/db/drizzle";
 import { accounts, insertAccountSchema } from "@/db/schema";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
+import { z } from "zod";
+import { error } from "console";
 const app = new Hono()
   .get("/", clerkMiddleware(), async (c) => {
     const auth = getAuth(c);
@@ -14,8 +16,8 @@ const app = new Hono()
     }
     const data = await db
       .select({ id: accounts.id, name: accounts.name })
-      .from(accounts)
-      .where(eq(accounts.userId, auth.userId));
+      .from(accounts);
+    // .where(eq(accounts.userId, auth.userId));
 
     return c.json({ data });
   })
@@ -25,19 +27,58 @@ const app = new Hono()
     zValidator("json", insertAccountSchema.pick({ name: true })),
     async (c) => {
       const auth = getAuth(c);
-      const values = c.req.valid("json");
-      console.log("values", values);
-      if (!auth?.userId) {
-        return c.json({ data: { error: "Unauthorized" } }, 401);
+      try {
+        const values = c.req.valid("json");
+        console.log("values 9999", values);
+        if (!auth?.userId) {
+          return c.json({ data: { error: "Unauthorized" } }, 401);
+        }
+        if (!values) {
+          return c.json({ data: { error: "Invalid JSON payload" } }, 400);
+        }
+        const [data] = await db
+          .insert(accounts)
+          .values({
+            id: createId(),
+            userId: auth?.userId,
+            ...values,
+          })
+          .returning();
+        return c.json({ data });
+      } catch (error) {
+        console.error("Error processing request:", error);
+        return c.json({ data: { error: "Internal Server Error" } }, 500);
       }
-      const [data] = await db
-        .insert(accounts)
-        .values({
-          id: createId(),
-          userId: auth?.userId,
-          ...values,
-        })
-        .returning();
+    }
+  )
+  .post(
+    "/bulk-delete",
+    clerkMiddleware(),
+    zValidator(
+      "json",
+      z.object({
+        ids: z.array(z.string()),
+      })
+    ),
+    async (c) => {
+      const auth = getAuth(c);
+      const values = c.req.valid("json");
+
+      if (!auth?.userId) {
+        return c.json({ error: "Unauthoried" }, 401);
+      }
+
+      const data = await db
+        .delete(accounts)
+        .where(
+          and(
+            eq(accounts.userId, auth.userId),
+            inArray(accounts.id, values?.ids)
+          )
+        )
+        .returning({
+          id: accounts.id,
+        });
       return c.json({ data });
     }
   );
