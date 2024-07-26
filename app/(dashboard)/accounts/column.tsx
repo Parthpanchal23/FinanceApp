@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 // You can use a Zod schema here if you want.
 import { InferResponseType } from "hono";
 import { client } from "@/lib/hono";
+import Actions from "./actions";
 export type ResponseType = InferResponseType<
   typeof client.api.accounts.$get,
   200
@@ -57,5 +58,10 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: "email",
     header: "Email",
+  },
+  {
+    accessorKey: "actions",
+    header: "actions",
+    cell: ({ row }) => <Actions id={row.original.id} />,
   },
 ];

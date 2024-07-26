@@ -14,7 +14,23 @@ const Accountpage = () => {
   const newAccount = useNewAccount();
   const accountQuery = useGetAccounts();
   const deleteAcconuts = useBulkAccounts();
-  const accounts = accountQuery.data || [];
+  const payments = [
+    {
+      id: "728ed52f",
+      name: "xcxc",
+      amount: 100,
+      status: "pending",
+      email: "m@example.com",
+    },
+    {
+      id: "489e1d42",
+      name: "poipo",
+      amount: 125,
+      status: "processing",
+      email: "example@gmail.com",
+    },
+  ];
+  const accounts = accountQuery.data || payments;
 
   const isDisabled = accountQuery.isLoading || deleteAcconuts.isPending;
   if (accountQuery.isLoading) {
